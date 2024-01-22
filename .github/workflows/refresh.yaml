@@ -1,0 +1,53 @@
+name: Refresh Workflow
+
+on:
+ schedule:
+  - cron: "0 6 7 * *"
+ workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: min
+          environment-file: environment.yml
+
+      - name: Run main.py
+        shell: bash -el {0}
+        run: |
+          conda activate min
+          python main.py
+
+      - name: Commit files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"        
+          git add .
+          git commit -m "Refresh data up to 7 days prior to $(date +'%Y-%m-%d')"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+
+      - name: Set env vars
+        run: |
+          echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+      - name: Commit files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"        
+          git add .
+          git commit -m "Refresh data up to 7 days prior to $DATE"
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}

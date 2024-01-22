@@ -1,0 +1,15 @@
+name: min
+channels:
+  - defaults
+dependencies:
+  - python=3.11.3
+  - geopandas=0.14.2
+  - numpy=1.26.3
+  - pandas=2.1.4
+  - ipykernel
+  - pip
+  - pip:
+    - keplergl==0.3.2
+    - tqdm
+    - fire
+
