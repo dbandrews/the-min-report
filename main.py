@@ -1,14 +1,14 @@
 # %%
-from pathlib import Path
-import time
 import logging
+import time
+from pathlib import Path
 from urllib.parse import urljoin
 
+import geopandas as gpd
+import keplergl
 import pandas as pd
 import requests
-import geopandas as gpd
 from tqdm import tqdm
-import keplergl
 
 from min_map_config import config
 
@@ -93,27 +93,31 @@ if __name__ == "__main__":
     end_date = pd.to_datetime("today") + pd.Timedelta(days=-days_prior_check)
     logging.info(f"Scraping from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
     df_min_reports_new = get_min_reports(start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
-    df_min_reports_details_new = pd.concat(
-        [get_min_report_details(x, sleep=sleep) for x in tqdm(df_min_reports_new.id.values)]
-    )
 
-    df_min_reports_combined = pd.concat([df_min_reports, df_min_reports_new], join="outer").drop_duplicates("id")
-    df_min_reports_details_combined = pd.concat(
-        [df_min_reports_details, df_min_reports_details_new], join="outer"
-    ).drop_duplicates("id")
+    if len(df_min_reports_new) == 0:
+        logging.info("No new reports found")
+    else:
+        df_min_reports_details_new = pd.concat(
+            [get_min_report_details(x, sleep=sleep) for x in tqdm(df_min_reports_new.id.values)]
+        )
 
-    df_min_reports_combined.sort_values("datetime").to_csv(Path("data/min_reports.csv"), index=False)
-    df_min_reports_details_combined.to_csv(Path("data/min_reports_details.csv"), index=False)
-    df_min_reports_merged = df_min_reports_combined.merge(df_min_reports_details_combined, on="id")
+        df_min_reports_combined = pd.concat([df_min_reports, df_min_reports_new], join="outer").drop_duplicates("id")
+        df_min_reports_details_combined = pd.concat(
+            [df_min_reports_details, df_min_reports_details_new], join="outer"
+        ).drop_duplicates("id")
 
-    # %%
-    # Create map
-    forecast_regions = gpd.read_file("data/forecast_regions.json")
-    min_map = keplergl.KeplerGl(height=700)
-    min_map.add_data(data=df_min_reports_merged.copy(), name="min_reports")
-    min_map.add_data(data=forecast_regions.copy(), name="forecast_regions")
-    min_map.config = config
-    min_map.save_to_html(file_name="index.html")
+        df_min_reports_combined.sort_values("datetime").to_csv(Path("data/min_reports.csv"), index=False)
+        df_min_reports_details_combined.to_csv(Path("data/min_reports_details.csv"), index=False)
+        df_min_reports_merged = df_min_reports_combined.merge(df_min_reports_details_combined, on="id")
+
+        # %%
+        # Create map
+        forecast_regions = gpd.read_file("data/forecast_regions.json")
+        min_map = keplergl.KeplerGl(height=700)
+        min_map.add_data(data=df_min_reports_merged.copy(), name="min_reports")
+        min_map.add_data(data=forecast_regions.copy(), name="forecast_regions")
+        min_map.config = config
+        min_map.save_to_html(file_name="index.html")
 
     # %%
     # # To tweak map config, use the following code to open the map in a browser, then run following cell
