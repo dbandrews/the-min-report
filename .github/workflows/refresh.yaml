@@ -25,12 +25,16 @@ jobs:
       - name: Set env vars
         run: |
           echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-      - name: Commit files
+      - name: Commit files if changes exist
         run: |
           git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"        
+          git config --local user.name "GitHub Action"
           git add .
-          git commit -m "Refresh data up to 7 days prior to $DATE"
+          if [ -n "$(git status --porcelain)" ]; then
+            git commit -m "Refresh data up to 7 days prior to $DATE"
+          else
+            echo "No changes to commit"
+          fi
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
