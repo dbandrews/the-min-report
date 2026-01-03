@@ -31,7 +31,7 @@ jobs:
           git config --local user.name "GitHub Action"
           git add .
           if [ -n "$(git status --porcelain)" ]; then
-            git commit -m "Refresh data up to 7 days prior to $DATE"
+            git commit -m "Refresh data up to and including prior day to $DATE"
           else
             echo "No changes to commit"
           fi

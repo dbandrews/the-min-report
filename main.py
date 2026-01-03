@@ -81,7 +81,7 @@ def get_min_report_details(min_id: str, sleep: int = 1) -> pd.DataFrame:
 # %%
 if __name__ == "__main__":
     # Update data
-    days_prior_check = 7
+    days_prior_check = 1
     sleep = 0
 
     logging.basicConfig(level=logging.INFO)
